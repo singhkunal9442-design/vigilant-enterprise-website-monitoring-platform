@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { MonitorFormDrawer } from '@/components/monitor-form-drawer';
 import { api } from '@/lib/api-client';
 import type { Monitor } from '@shared/types';
+import { cn } from '@/lib/utils';
 export default function DashboardPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -20,8 +21,8 @@ export default function DashboardPage() {
   });
   const filteredMonitors = useMemo(() => {
     if (!monitors) return [];
-    return monitors.filter(m => 
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    return monitors.filter(m =>
+      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.url.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [monitors, searchQuery]);
@@ -29,18 +30,18 @@ export default function DashboardPage() {
     navigate(`/monitors/${id}`);
   };
   return (
-    <AppLayout container className="bg-slate-950 min-h-screen">
-      <div className="space-y-8 animate-fade-in">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-black text-white tracking-tight">Mission Control</h1>
-            <p className="text-slate-400 font-medium">Monitoring {monitors?.length || 0} active nodes.</p>
+    <AppLayout container className="bg-background min-h-screen">
+      <div className="space-y-12 animate-fade-in max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <div className="space-y-2">
+            <h1 className="text-4xl font-black text-foreground tracking-tight leading-none">Mission Control</h1>
+            <p className="text-muted-foreground font-bold text-sm tracking-tight">Monitoring {monitors?.length || 0} active cluster nodes.</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Button
               variant="outline"
               size="sm"
-              className="bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+              className="bg-secondary border-border text-muted-foreground hover:text-foreground font-bold shadow-comfort"
               onClick={() => navigate('/reports')}
             >
               <BarChart2 className="w-4 h-4 mr-2" />
@@ -49,48 +50,48 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="icon"
-              className="bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-400"
+              className="bg-secondary border-border hover:bg-accent text-muted-foreground shadow-comfort"
               onClick={() => refetch()}
               disabled={isFetching}
             >
-              <RefreshCw className={isFetching ? "w-4 h-4 animate-spin text-emerald-500" : "w-4 h-4"} />
+              <RefreshCw className={cn("w-4 h-4", isFetching && "animate-spin text-emerald-500")} />
             </Button>
             <Button
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 shadow-lg shadow-emerald-500/10"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-8 shadow-lg shadow-emerald-500/10 transition-comfort"
               onClick={() => setIsDrawerOpen(true)}
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-5 h-5 mr-2" />
               Add Node
             </Button>
           </div>
         </div>
-        <div className="flex items-center gap-4 p-2 bg-slate-900/50 border border-slate-800 rounded-2xl">
+        <div className="flex items-center gap-4 p-3 bg-secondary/30 border border-border/50 rounded-2xl shadow-comfort">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Filter nodes..."
+              placeholder="Filter nodes by name or URL..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-transparent border-none focus-visible:ring-0 text-slate-200 placeholder:text-slate-600"
+              className="pl-12 bg-transparent border-none focus-visible:ring-0 text-foreground placeholder:text-muted-foreground font-medium"
             />
           </div>
-          <Button variant="ghost" size="sm" className="hidden sm:flex text-slate-400 hover:text-white">
+          <Button variant="ghost" size="sm" className="hidden sm:flex text-muted-foreground hover:text-foreground font-bold">
             <Filter className="w-4 h-4 mr-2" />
             Filter
           </Button>
-          <div className="hidden sm:block h-6 w-[1px] bg-slate-800" />
-          <Button variant="ghost" size="icon" className="text-emerald-500 bg-emerald-500/5">
+          <div className="hidden sm:block h-8 w-[1px] bg-border/50" />
+          <Button variant="ghost" size="icon" className="text-emerald-500 bg-emerald-500/10">
             <LayoutGrid className="w-4 h-4" />
           </Button>
         </div>
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-56 rounded-3xl bg-slate-900 animate-pulse border border-slate-800" />
+              <div key={i} className="h-64 rounded-3xl bg-secondary animate-pulse border border-border" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredMonitors.map((monitor) => (
               <MonitorCard
                 key={monitor.id}
@@ -100,13 +101,13 @@ export default function DashboardPage() {
             ))}
             <div
               onClick={() => setIsDrawerOpen(true)}
-              className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-800 rounded-3xl group hover:border-emerald-500/30 transition-all duration-300 cursor-pointer min-h-[190px] bg-slate-900/20 hover:bg-emerald-500/[0.02]"
+              className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-3xl group hover:border-emerald-500/40 transition-comfort cursor-pointer min-h-[220px] bg-secondary/10 hover:bg-emerald-500/[0.02] shadow-comfort"
             >
-              <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center mb-4 group-hover:bg-emerald-500/10 group-hover:text-emerald-500 transition-colors border border-slate-800">
-                <Plus className="w-6 h-6 text-slate-500 group-hover:text-emerald-500" />
+              <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-6 group-hover:bg-emerald-500/10 group-hover:text-emerald-500 transition-colors border border-border shadow-comfort">
+                <Plus className="w-8 h-8 text-muted-foreground group-hover:text-emerald-500 transition-transform duration-500 group-hover:rotate-90" />
               </div>
-              <p className="text-sm font-bold text-slate-500 group-hover:text-slate-300">Deploy New Node</p>
-              <p className="text-xs text-slate-600 mt-1 text-center">Start tracking uptime in seconds</p>
+              <p className="text-sm font-black text-muted-foreground group-hover:text-foreground tracking-tight">Deploy New Node</p>
+              <p className="text-xs text-muted-foreground/60 mt-2 text-center font-medium">Start tracking uptime in seconds</p>
             </div>
           </div>
         )}

@@ -29,7 +29,7 @@ import {
 import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Mail } from 'lucide-react';
 import type { Monitor } from '@shared/types';
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -75,17 +75,25 @@ export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDr
       };
       const url = monitor ? `/api/monitors/${monitor.id}` : '/api/monitors';
       const method = monitor ? 'PUT' : 'POST';
-      return api(url, {
+      return api<Monitor>(url, {
         method,
         body: JSON.stringify(payload),
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['monitors'] });
       if (monitor) {
         queryClient.invalidateQueries({ queryKey: ['monitor', monitor.id] });
+        toast.success('Monitor updated');
+      } else {
+        toast.success('Monitor established');
+        // Simulate registration email dispatch
+        toast('Registration Email Sent', {
+          description: `Performance metrics for ${data.url} at ${data.interval}m intervals have been logged to your primary contact.`,
+          icon: <Mail className="w-4 h-4 text-emerald-500" />,
+          duration: 5000,
+        });
       }
-      toast.success(monitor ? 'Monitor updated' : 'Monitor established');
       onOpenChange(false);
       form.reset();
     },
@@ -96,13 +104,13 @@ export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDr
   }
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="bg-slate-950 border-slate-800 text-slate-50 sm:max-w-md">
+      <SheetContent className="bg-background border-l border-sidebar-border text-foreground sm:max-w-md">
         <SheetHeader className="mb-8">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4">
             <ShieldCheck className="w-6 h-6" />
           </div>
           <SheetTitle className="text-2xl font-black">{monitor ? 'Edit Node' : 'New Node'}</SheetTitle>
-          <SheetDescription className="text-slate-400">
+          <SheetDescription className="text-muted-foreground">
             {monitor ? 'Update monitoring parameters for this endpoint.' : 'Configure a new endpoint for continuous health monitoring.'}
           </SheetDescription>
         </SheetHeader>
@@ -113,9 +121,9 @@ export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDr
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold uppercase text-slate-500">Node Name</FormLabel>
+                  <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Node Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g. Production API" className="bg-slate-900 border-slate-800" {...field} />
+                    <Input placeholder="e.g. Production API" className="bg-secondary border-input" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -126,9 +134,9 @@ export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDr
               name="url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold uppercase text-slate-500">Endpoint URL</FormLabel>
+                  <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Endpoint URL</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://api.example.com/health" className="bg-slate-900 border-slate-800" {...field} />
+                    <Input placeholder="https://api.example.com/health" className="bg-secondary border-input" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -139,14 +147,14 @@ export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDr
               name="interval"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-xs font-bold uppercase text-slate-500">Check Interval</FormLabel>
+                  <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Check Interval</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="bg-slate-900 border-slate-800">
+                      <SelectTrigger className="bg-secondary border-input">
                         <SelectValue placeholder="Select frequency" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className="bg-slate-900 border-slate-800 text-slate-200">
+                    <SelectContent className="bg-popover border-border">
                       <SelectItem value="1">1 minute (Real-time)</SelectItem>
                       <SelectItem value="5">5 minutes (Standard)</SelectItem>
                       <SelectItem value="15">15 minutes (Relaxed)</SelectItem>
@@ -160,7 +168,7 @@ export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDr
             <div className="pt-4 space-y-3">
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-500 font-bold"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
                 disabled={mutation.isPending}
               >
                 {mutation.isPending ? 'Processing...' : (monitor ? 'Save Changes' : 'Deploy Monitor')}
@@ -168,7 +176,7 @@ export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDr
               <Button
                 type="button"
                 variant="ghost"
-                className="w-full text-slate-500 hover:text-white"
+                className="w-full text-muted-foreground hover:text-foreground"
                 onClick={() => onOpenChange(false)}
               >
                 Cancel

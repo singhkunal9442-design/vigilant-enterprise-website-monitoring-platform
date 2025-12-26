@@ -73,7 +73,7 @@ export default function MonitorDetailPage() {
     },
     onError: (err: any) => toast.error(err.message),
   });
-  if (isLoading) return <div className="p-12 text-center text-slate-500">Scanning endpoint...</div>;
+  if (isLoading) return <div className="p-12 text-center text-muted-foreground animate-pulse">Scanning endpoint...</div>;
   if (!monitor) return <div className="p-12 text-center">Monitor not found.</div>;
   const isUp = monitor.status === 'UP';
   const lastLatency = monitor.history[0]?.latency ?? 0;
@@ -82,26 +82,26 @@ export default function MonitorDetailPage() {
     latency: h.latency,
     status: h.status
   }));
-  const uptimePercentage = monitor.history.length > 0 
+  const uptimePercentage = monitor.history.length > 0
     ? ((monitor.history.filter(h => h.status === 'UP').length / monitor.history.length) * 100).toFixed(1)
     : "100.0";
   return (
-    <AppLayout container className="bg-slate-950 min-h-screen">
-      <div className="space-y-8 animate-fade-in">
+    <AppLayout container className="bg-background min-h-screen">
+      <div className="space-y-10 animate-fade-in max-w-7xl mx-auto">
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => navigate('/dashboard')}
-            className="text-slate-400 hover:text-white -ml-2"
+            className="text-muted-foreground hover:text-foreground -ml-2 font-bold"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Button
               variant="outline"
               size="sm"
-              className="bg-slate-900 border-slate-800 text-slate-400 hover:text-white"
+              className="bg-secondary border-border text-muted-foreground hover:text-foreground font-bold shadow-comfort"
               onClick={() => setIsEditDrawerOpen(true)}
             >
               <Edit2 className="w-3.5 h-3.5 mr-2" />
@@ -109,161 +109,148 @@ export default function MonitorDetailPage() {
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="bg-slate-900 border-slate-800 text-rose-500 hover:bg-rose-500/10">
+                <Button variant="outline" size="sm" className="bg-secondary border-border text-rose-500 hover:bg-rose-500/10 font-bold shadow-comfort">
                   <Trash2 className="w-3.5 h-3.5 mr-2" />
                   Delete
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-50">
+              <AlertDialogContent className="bg-popover border-border text-foreground">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-slate-400">
+                  <AlertDialogTitle className="font-black text-xl">Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-muted-foreground font-medium">
                     This will permanently delete the monitor for {monitor.url} and all history data.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-slate-800 text-slate-50 border-slate-700">Cancel</AlertDialogCancel>
-                  <AlertDialogAction className="bg-rose-600 text-white hover:bg-rose-500" onClick={() => deleteMutation.mutate()}>Delete</AlertDialogAction>
+                  <AlertDialogCancel className="bg-secondary text-foreground border-border font-bold">Cancel</AlertDialogCancel>
+                  <AlertDialogAction className="bg-rose-600 text-white hover:bg-rose-500 font-bold" onClick={() => deleteMutation.mutate()}>Delete Node</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
         </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 p-8 rounded-3xl bg-slate-900/50 border border-slate-800">
-          <div className="flex items-center gap-5">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 p-10 rounded-4xl bg-card border border-border shadow-comfort">
+          <div className="flex items-center gap-6">
             <div className={cn(
-              "w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg",
-              isUp ? "bg-emerald-500/20 text-emerald-500 shadow-emerald-500/10" : "bg-rose-500/20 text-rose-500 shadow-rose-500/10"
+              "w-20 h-20 rounded-3xl flex items-center justify-center shadow-lg transition-comfort",
+              isUp ? "bg-emerald-500/10 text-emerald-500 shadow-emerald-500/5" : "bg-rose-500/10 text-rose-500 shadow-rose-500/5"
             )}>
-              <Globe className="w-8 h-8" />
+              <Globe className="w-10 h-10" />
             </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-black text-white">{monitor.name}</h1>
+            <div className="space-y-1">
+              <div className="flex items-center gap-4">
+                <h1 className="text-4xl font-black text-foreground tracking-tighter leading-none">{monitor.name}</h1>
                 <Badge variant="outline" className={cn(
-                  "px-3 py-1 font-bold",
-                  isUp ? "border-emerald-500/50 text-emerald-400 bg-emerald-500/10" : "border-rose-500/50 text-rose-400 bg-rose-500/10"
+                  "px-4 py-1.5 font-black text-[10px] uppercase tracking-widest rounded-xl",
+                  isUp ? "border-emerald-500/30 text-emerald-600 bg-emerald-500/5" : "border-rose-500/30 text-rose-600 bg-rose-500/5"
                 )}>
                   {monitor.status}
                 </Badge>
               </div>
-              <a href={monitor.url} target="_blank" rel="noreferrer" className="text-slate-500 hover:text-emerald-400 flex items-center gap-1.5 transition-colors mt-1">
-                {monitor.url} <ExternalLink className="w-3 h-3" />
+              <a href={monitor.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-emerald-500 flex items-center gap-2 transition-colors font-mono font-bold text-sm">
+                {monitor.url} <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
           </div>
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-4 w-full md:w-auto">
              <Button
               variant="outline"
               onClick={() => setSimulateFailure(!simulateFailure)}
               className={cn(
-                "font-bold transition-all",
-                simulateFailure ? "bg-rose-500/20 text-rose-500 border-rose-500/50" : "bg-slate-900 border-slate-800 text-slate-500"
+                "font-black text-xs uppercase tracking-widest px-6 transition-comfort shadow-comfort h-12",
+                simulateFailure ? "bg-rose-500/20 text-rose-500 border-rose-500/40" : "bg-secondary border-border text-muted-foreground"
               )}
             >
               <ZapOff className="w-4 h-4 mr-2" />
-              {simulateFailure ? "Failure Mode" : "Simulate Down"}
+              {simulateFailure ? "Failure Mode ACTIVE" : "Simulate Outage"}
             </Button>
             <Button
               onClick={() => checkMutation.mutate()}
               disabled={checkMutation.isPending}
-              className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 font-bold"
+              className="flex-1 md:flex-none bg-emerald-600 hover:bg-emerald-500 text-white font-black px-8 h-12 shadow-lg shadow-emerald-500/10 transition-comfort"
             >
               <RefreshCw className={cn("w-4 h-4 mr-2", checkMutation.isPending && "animate-spin")} />
-              Check Now
+              Manual Sync
             </Button>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-slate-900 border-slate-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">Last Latency</CardTitle>
-              <Activity className="w-4 h-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black text-white">{lastLatency}ms</div>
-              <p className="text-xs text-slate-500 mt-1">From most recent check</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-900 border-slate-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">Interval</CardTitle>
-              <Clock className="w-4 h-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black text-white">{monitor.interval}m</div>
-              <p className="text-xs text-slate-500 mt-1">Continuous heartbeat</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-slate-900 border-slate-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">Uptime (Session)</CardTitle>
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-black text-white">{uptimePercentage}%</div>
-              <p className="text-xs text-slate-500 mt-1">Health ratio in current history</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {[
+            { title: "Last Latency", value: `${lastLatency}ms`, icon: Activity, desc: "From most recent check" },
+            { title: "Check Interval", value: `${monitor.interval}m`, icon: Clock, desc: "Continuous heartbeat" },
+            { title: "Uptime (Session)", value: `${uptimePercentage}%`, icon: ShieldCheck, desc: "Health ratio" }
+          ].map((stat, i) => (
+            <Card key={i} className="bg-card border-border shadow-comfort p-4">
+              <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+                <CardTitle className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{stat.title}</CardTitle>
+                <stat.icon className="w-5 h-5 text-emerald-500 opacity-60" />
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-4xl font-black text-foreground tracking-tighter">{stat.value}</div>
+                <p className="text-[11px] text-muted-foreground mt-2 font-bold tracking-tight">{stat.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-        <Card className="bg-slate-900 border-slate-800 overflow-hidden">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold">Performance Analytics</CardTitle>
+        <Card className="bg-card border-border shadow-comfort overflow-hidden">
+          <CardHeader className="p-8 border-b border-border/40">
+            <CardTitle className="text-xl font-black tracking-tight">Telemetry Analytics</CardTitle>
           </CardHeader>
-          <CardContent className="p-0 sm:p-6">
-            <div className="h-[300px] w-full px-2">
+          <CardContent className="p-0 sm:p-10">
+            <div className="h-[350px] w-full px-2">
               {historyData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={historyData}>
                     <defs>
                       <linearGradient id="colorLatency" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
                         <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                    <XAxis dataKey="time" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} unit="ms" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-border" vertical={false} />
+                    <XAxis dataKey="time" stroke="currentColor" className="text-muted-foreground" fontSize={11} tickLine={false} axisLine={false} tickMargin={10} />
+                    <YAxis stroke="currentColor" className="text-muted-foreground" fontSize={11} tickLine={false} axisLine={false} unit="ms" tickMargin={10} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '12px' }}
-                      itemStyle={{ color: '#10b981' }}
+                      contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-comfort)' }}
+                      labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '4px' }}
+                      itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
                     />
-                    <Area type="monotone" dataKey="latency" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorLatency)" />
+                    <Area type="monotone" dataKey="latency" stroke="#10b981" strokeWidth={4} fillOpacity={1} fill="url(#colorLatency)" animationDuration={2000} />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-600 italic">No telemetry data available yet.</div>
+                <div className="h-full flex items-center justify-center text-muted-foreground font-bold italic">Waiting for telemetry logs...</div>
               )}
             </div>
           </CardContent>
         </Card>
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <Activity className="w-5 h-5 text-emerald-500" />
-            System Events
+        <div className="space-y-6 pb-12">
+          <h2 className="text-2xl font-black flex items-center gap-3 text-foreground tracking-tight">
+            <Activity className="w-6 h-6 text-emerald-500" />
+            System Audit Log
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {monitor.history.map((log) => (
-              <div key={log.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:bg-slate-800/50 transition-colors">
-                <div className="flex items-center gap-4">
+              <div key={log.id} className="flex items-center justify-between p-6 rounded-3xl bg-card border border-border hover:bg-accent/50 transition-comfort shadow-comfort">
+                <div className="flex items-center gap-6">
                   <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center",
+                    "w-12 h-12 rounded-2xl flex items-center justify-center transition-comfort",
                     log.status === 'UP' ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"
                   )}>
-                    {log.status === 'UP' ? <ShieldCheck className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                    {log.status === 'UP' ? <ShieldCheck className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
                   </div>
                   <div>
-                    <div className="font-bold flex items-center gap-2">
-                      {log.status === 'UP' ? 'Pulse Success' : 'Endpoint Alert'}
-                      <span className="text-xs text-slate-500 font-medium">• {log.latency}ms</span>
+                    <div className="font-black text-foreground flex items-center gap-3">
+                      {log.status === 'UP' ? 'Pulse Authenticated' : 'Endpoint Anomaly'}
+                      <span className="text-xs text-muted-foreground font-bold font-mono tracking-tighter bg-secondary px-2 py-0.5 rounded-lg">{log.latency}ms</span>
                     </div>
-                    <div className="text-xs text-slate-500 font-mono">
+                    <div className="text-[11px] text-muted-foreground font-mono mt-1 font-bold">
                       {format(log.timestamp, 'yyyy-MM-dd HH:mm:ss')}
                     </div>
                   </div>
                 </div>
                 {log.message && (
-                  <Badge variant="secondary" className="bg-slate-800 text-slate-400 font-mono text-[10px] py-1 px-3 border border-slate-700">
+                  <Badge variant="secondary" className="bg-secondary text-muted-foreground font-mono text-[9px] py-1.5 px-4 border border-border rounded-lg uppercase tracking-wider font-black">
                     {log.message}
                   </Badge>
                 )}
