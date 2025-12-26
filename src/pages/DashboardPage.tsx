@@ -10,6 +10,7 @@ import { MonitorFormDrawer } from '@/components/monitor-form-drawer';
 import { api } from '@/lib/api-client';
 import type { Monitor } from '@shared/types';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 export default function DashboardPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,11 +30,29 @@ export default function DashboardPage() {
   const handleCardClick = (id: string) => {
     navigate(`/monitors/${id}`);
   };
+  const handleSyncAll = async () => {
+    toast.promise(api('/api/monitors/sync-all', { method: 'POST' }), {
+      loading: 'Initiating global cluster sync...',
+      success: () => {
+        refetch();
+        return 'Cluster telemetry synchronized.';
+      },
+      error: 'Sync operation failed'
+    });
+  };
+
   return (
     <AppLayout container className="bg-background min-h-screen">
-      <div className="space-y-12 animate-fade-in max-w-7xl mx-auto">
+      <div className="space-y-12 animate-fade-in">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-2">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              Engine: Active
+            </div>
             <h1 className="text-4xl font-black text-foreground tracking-tight leading-none">Mission Control</h1>
             <p className="text-muted-foreground font-bold text-sm tracking-tight">Monitoring {monitors?.length || 0} active cluster nodes.</p>
           </div>
@@ -49,12 +68,12 @@ export default function DashboardPage() {
             </Button>
             <Button
               variant="outline"
-              size="icon"
-              className="bg-secondary border-border hover:bg-accent text-muted-foreground shadow-comfort"
-              onClick={() => refetch()}
+              className="bg-secondary border-border hover:bg-accent text-muted-foreground font-bold shadow-comfort"
+              onClick={handleSyncAll}
               disabled={isFetching}
             >
-              <RefreshCw className={cn("w-4 h-4", isFetching && "animate-spin text-emerald-500")} />
+              <RefreshCw className={cn("w-4 h-4 mr-2", isFetching && "animate-spin text-emerald-500")} />
+              Sync All
             </Button>
             <Button
               className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-8 shadow-lg shadow-emerald-500/10 transition-comfort"

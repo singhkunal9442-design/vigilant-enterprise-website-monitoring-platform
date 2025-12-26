@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Env } from './core-utils';
 import { MonitorEntity } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-import type { MonitorStatus } from "@shared/types";
+import { runSingleCheck, performGlobalCheck } from "./monitor-engine";
 export function monitorRoutes(app: Hono<{ Bindings: Env }>) {
   // LIST MONITORS
   app.get('/api/monitors', async (c) => {
@@ -48,51 +48,22 @@ export function monitorRoutes(app: Hono<{ Bindings: Env }>) {
     }));
     return ok(c, updated);
   });
+  // SYNC ALL MONITORS (Global check trigger)
+  app.post('/api/monitors/sync-all', async (c) => {
+    const results = await performGlobalCheck(c.env);
+    return ok(c, results);
+  });
   // TRIGGER MANUAL CHECK (with simulation support)
   app.post('/api/monitors/:id/check', async (c) => {
     const id = c.req.param('id');
     const simulateFailure = c.req.query('simulate_failure') === 'true';
     const entity = new MonitorEntity(c.env, id);
     if (!await entity.exists()) return notFound(c, 'Monitor not found');
+    
     const monitor = await entity.getState();
-    const start = performance.now();
-    let status: MonitorStatus = 'UP';
-    let statusCode: number | undefined;
-    let message: string | undefined;
-    if (simulateFailure) {
-      status = 'DOWN';
-      message = 'Simulated Outage (Drill)';
-      statusCode = 503;
-    } else {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        const res = await fetch(monitor.url, {
-          method: 'GET',
-          signal: controller.signal,
-          headers: { 'User-Agent': 'VigilantMonitor/1.0' }
-        });
-        clearTimeout(timeoutId);
-        statusCode = res.status;
-        if (!res.ok) {
-          status = 'DOWN';
-          message = `HTTP Error: ${res.status} ${res.statusText}`;
-        }
-      } catch (err: any) {
-        status = 'DOWN';
-        message = err.name === 'AbortError' ? 'Timeout' : err.message || 'Connection Failed';
-      }
-    }
-    const latency = Math.round(performance.now() - start);
-    const historyEntry = {
-      id: crypto.randomUUID(),
-      timestamp: Date.now(),
-      latency: status === 'UP' ? latency : 0,
-      status,
-      statusCode,
-      message
-    };
+    const historyEntry = await runSingleCheck(c.env, monitor, simulateFailure);
     await entity.addHistory(historyEntry);
+    
     const updated = await entity.getState();
     return ok(c, updated);
   });
