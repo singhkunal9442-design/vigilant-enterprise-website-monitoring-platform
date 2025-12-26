@@ -22,7 +22,6 @@ export function monitorRoutes(app: Hono<{ Bindings: Env }>) {
   app.post('/api/monitors', async (c) => {
     const body = await c.req.json() as { name: string; url: string; interval?: number };
     if (!isStr(body.name) || !isStr(body.url)) return bad(c, 'name and url required');
-    // Simple normalization
     let targetUrl = body.url.trim();
     if (!targetUrl.startsWith('http')) targetUrl = 'https://' + targetUrl;
     const monitor = await MonitorEntity.create(c.env, {
@@ -35,9 +34,24 @@ export function monitorRoutes(app: Hono<{ Bindings: Env }>) {
     });
     return ok(c, monitor);
   });
-  // TRIGGER MANUAL CHECK
+  // UPDATE MONITOR
+  app.put('/api/monitors/:id', async (c) => {
+    const id = c.req.param('id');
+    const entity = new MonitorEntity(c.env, id);
+    if (!await entity.exists()) return notFound(c, 'Monitor not found');
+    const body = await c.req.json() as { name?: string; url?: string; interval?: number };
+    const updated = await entity.mutate(s => ({
+      ...s,
+      name: body.name?.trim() || s.name,
+      url: body.url?.trim() || s.url,
+      interval: body.interval ?? s.interval,
+    }));
+    return ok(c, updated);
+  });
+  // TRIGGER MANUAL CHECK (with simulation support)
   app.post('/api/monitors/:id/check', async (c) => {
     const id = c.req.param('id');
+    const simulateFailure = c.req.query('simulate_failure') === 'true';
     const entity = new MonitorEntity(c.env, id);
     if (!await entity.exists()) return notFound(c, 'Monitor not found');
     const monitor = await entity.getState();
@@ -45,23 +59,29 @@ export function monitorRoutes(app: Hono<{ Bindings: Env }>) {
     let status: MonitorStatus = 'UP';
     let statusCode: number | undefined;
     let message: string | undefined;
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-      const res = await fetch(monitor.url, {
-        method: 'GET',
-        signal: controller.signal,
-        headers: { 'User-Agent': 'VigilantMonitor/1.0' }
-      });
-      clearTimeout(timeoutId);
-      statusCode = res.status;
-      if (!res.ok) {
-        status = 'DOWN';
-        message = `HTTP Error: ${res.status} ${res.statusText}`;
-      }
-    } catch (err: any) {
+    if (simulateFailure) {
       status = 'DOWN';
-      message = err.name === 'AbortError' ? 'Timeout' : err.message || 'Connection Failed';
+      message = 'Simulated Outage (Drill)';
+      statusCode = 503;
+    } else {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const res = await fetch(monitor.url, {
+          method: 'GET',
+          signal: controller.signal,
+          headers: { 'User-Agent': 'VigilantMonitor/1.0' }
+        });
+        clearTimeout(timeoutId);
+        statusCode = res.status;
+        if (!res.ok) {
+          status = 'DOWN';
+          message = `HTTP Error: ${res.status} ${res.statusText}`;
+        }
+      } catch (err: any) {
+        status = 'DOWN';
+        message = err.name === 'AbortError' ? 'Timeout' : err.message || 'Connection Failed';
+      }
     }
     const latency = Math.round(performance.now() - start);
     const historyEntry = {

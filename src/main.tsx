@@ -14,6 +14,7 @@ import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import DashboardPage from '@/pages/DashboardPage'
 import MonitorDetailPage from '@/pages/MonitorDetailPage'
+import ReportsPage from '@/pages/ReportsPage'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -36,6 +37,11 @@ const router = createBrowserRouter([
   {
     path: "/monitors/:id",
     element: <MonitorDetailPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/reports",
+    element: <ReportsPage />,
     errorElement: <RouteErrorBoundary />,
   },
 ]);
