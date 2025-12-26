@@ -1,0 +1,189 @@
+import React, { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { api } from '@/lib/api-client';
+import { toast } from 'sonner';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { ShieldCheck, Mail } from 'lucide-react';
+import type { Monitor } from '@shared/types';
+const formSchema = z.object({
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  url: z.string().min(3, 'Please enter a valid URL or domain'),
+  interval: z.string(),
+});
+type FormValues = z.infer<typeof formSchema>;
+interface MonitorFormDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  monitor?: Monitor | null;
+}
+export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDrawerProps) {
+  const queryClient = useQueryClient();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      url: '',
+      interval: '5',
+    },
+  });
+  useEffect(() => {
+    if (monitor && open) {
+      form.reset({
+        name: monitor.name,
+        url: monitor.url,
+        interval: monitor.interval.toString(),
+      });
+    } else if (!monitor && open) {
+      form.reset({
+        name: '',
+        url: '',
+        interval: '5',
+      });
+    }
+  }, [monitor, open, form]);
+  const mutation = useMutation({
+    mutationFn: (values: FormValues) => {
+      const payload = {
+        ...values,
+        interval: parseInt(values.interval, 10),
+      };
+      const url = monitor ? `/api/monitors/${monitor.id}` : '/api/monitors';
+      const method = monitor ? 'PUT' : 'POST';
+      return api<Monitor>(url, {
+        method,
+        body: JSON.stringify(payload),
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['monitors'] });
+      if (monitor) {
+        queryClient.invalidateQueries({ queryKey: ['monitor', monitor.id] });
+        toast.success('Monitor updated');
+      } else {
+        toast.success('Monitor established');
+        toast('Registration Email Sent', {
+          description: `Performance metrics for ${data.url} at ${data.interval}m intervals have been logged to your primary contact.`,
+          icon: <Mail className="w-4 h-4 text-emerald-500" />,
+          duration: 5000,
+        });
+      }
+      onOpenChange(false);
+      form.reset();
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+  function onSubmit(values: FormValues) {
+    mutation.mutate(values);
+  }
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="bg-background border-l border-sidebar-border text-foreground sm:max-w-md">
+        <SheetHeader className="mb-8">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4">
+            <ShieldCheck className="w-6 h-6" />
+          </div>
+          <SheetTitle className="text-2xl font-black">{monitor ? 'Edit Node' : 'New Node'}</SheetTitle>
+          <SheetDescription className="text-muted-foreground">
+            {monitor ? 'Update monitoring parameters for this endpoint.' : 'Configure a new endpoint for continuous health monitoring.'}
+          </SheetDescription>
+        </SheetHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Node Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Production API" className="bg-secondary border-input" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="url"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Endpoint URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://api.example.com/health" className="bg-secondary border-input" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="interval"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-bold uppercase text-muted-foreground">Check Interval</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-secondary border-input">
+                        <SelectValue placeholder="Select frequency" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="1">1 minute (Real-time)</SelectItem>
+                      <SelectItem value="5">5 minutes (Standard)</SelectItem>
+                      <SelectItem value="15">15 minutes (Relaxed)</SelectItem>
+                      <SelectItem value="60">60 minutes (Hourly)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="pt-4 space-y-3">
+              <Button
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+                disabled={mutation.isPending}
+              >
+                {mutation.isPending ? 'Processing...' : (monitor ? 'Save Changes' : 'Deploy Monitor')}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full text-muted-foreground hover:text-foreground"
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+}
