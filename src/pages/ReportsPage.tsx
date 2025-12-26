@@ -78,9 +78,11 @@ export default function ReportsPage() {
                 <BarChart data={stats.latencyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-border" vertical={false} />
                   <XAxis dataKey="name" stroke="currentColor" className="text-muted-foreground" fontSize={10} axisLine={false} tickLine={false} tickMargin={10} />
-                  <YAxis stroke="currentColor" className="text-muted-foreground" fontSize={11} axisLine={false} tickLine={false} tickMargin={10} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-comfort)' }}
+                  <YAxis stroke="currentColor" className="text-muted-foreground" fontSize={11} axisLine={false} tickLine={false} tickMargin={10} unit="ms" />
+                  <Tooltip
+                    formatter={(value: number) => [`${value}ms`, 'Latency']}
+                    contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-comfort-value)' }}
+                    labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)' }}
                     itemStyle={{ fontWeight: 'bold' }}
                   />
                   <Bar dataKey="latency" radius={[6, 6, 0, 0]} barSize={40}>
@@ -114,8 +116,9 @@ export default function ReportsPage() {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '12px' }}
+                    <Tooltip
+                      contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-comfort-value)' }}
+                      labelStyle={{ color: 'var(--foreground)', fontWeight: 'bold' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>

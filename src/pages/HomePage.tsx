@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Zap, Bell, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,18 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { Toaster, toast } from '@/components/ui/sonner';
 export function HomePage() {
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      setIsAuthenticated(true);
+    }
+  }, []);
   const handleLogin = () => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+      return;
+    }
     toast.promise(
       new Promise((resolve) => setTimeout(resolve, 1000)),
       {
@@ -51,7 +62,7 @@ export function HomePage() {
               onClick={handleLogin}
               className="bg-emerald-600 hover:bg-emerald-500 text-white px-10 py-7 text-lg font-black shadow-lg shadow-emerald-500/20 transition-comfort hover:scale-105"
             >
-              Sign in with Google
+              {isAuthenticated ? "Resume Mission" : "Sign in with Google"}
               <ArrowRight className="ml-2 w-6 h-6" />
             </Button>
             <Button variant="outline" size="lg" className="text-muted-foreground hover:text-foreground px-10 py-7 text-lg border-border hover:bg-secondary font-bold">

@@ -33,7 +33,7 @@ import { ShieldCheck, Mail } from 'lucide-react';
 import type { Monitor } from '@shared/types';
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  url: z.string().url('Please enter a valid URL (include http/https)'),
+  url: z.string().min(3, 'Please enter a valid URL or domain'),
   interval: z.string(),
 });
 type FormValues = z.infer<typeof formSchema>;
@@ -87,7 +87,6 @@ export function MonitorFormDrawer({ open, onOpenChange, monitor }: MonitorFormDr
         toast.success('Monitor updated');
       } else {
         toast.success('Monitor established');
-        // Simulate registration email dispatch
         toast('Registration Email Sent', {
           description: `Performance metrics for ${data.url} at ${data.interval}m intervals have been logged to your primary contact.`,
           icon: <Mail className="w-4 h-4 text-emerald-500" />,

@@ -211,7 +211,8 @@ export default function MonitorDetailPage() {
                     <XAxis dataKey="time" stroke="currentColor" className="text-muted-foreground" fontSize={11} tickLine={false} axisLine={false} tickMargin={10} />
                     <YAxis stroke="currentColor" className="text-muted-foreground" fontSize={11} tickLine={false} axisLine={false} unit="ms" tickMargin={10} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-comfort)' }}
+                      formatter={(value: number) => [`${value}ms`, 'Latency']}
+                      contentStyle={{ backgroundColor: 'var(--popover)', border: '1px solid var(--border)', borderRadius: '12px', boxShadow: 'var(--shadow-comfort-value)' }}
                       labelStyle={{ fontWeight: 'bold', color: 'var(--foreground)', marginBottom: '4px' }}
                       itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
                     />
