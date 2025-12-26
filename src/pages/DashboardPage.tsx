@@ -1,136 +1,81 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Plus, LayoutGrid, Search, Filter, RefreshCw, BarChart2 } from 'lucide-react';
+import { Plus, LayoutGrid, Search, Filter, RefreshCw } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { MonitorCard } from '@/components/monitor-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MonitorFormDrawer } from '@/components/monitor-form-drawer';
 import { api } from '@/lib/api-client';
 import type { Monitor } from '@shared/types';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
 export default function DashboardPage() {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
   const { data: monitors, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['monitors'],
     queryFn: () => api<Monitor[]>('/api/monitors'),
-    refetchInterval: 60000,
   });
-  const filteredMonitors = useMemo(() => {
-    if (!monitors) return [];
-    return monitors.filter(m =>
-      m.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.url.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [monitors, searchQuery]);
-  const handleCardClick = (id: string) => {
-    navigate(`/monitors/${id}`);
-  };
-  const handleSyncAll = async () => {
-    toast.promise(api('/api/monitors/sync-all', { method: 'POST' }), {
-      loading: 'Initiating global cluster sync...',
-      success: () => {
-        refetch();
-        return 'Cluster telemetry synchronized.';
-      },
-      error: 'Sync operation failed'
-    });
-  };
-
   return (
-    <AppLayout container className="bg-background min-h-screen">
-      <div className="space-y-12 animate-fade-in">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              Engine: Active
-            </div>
-            <h1 className="text-4xl font-black text-foreground tracking-tight leading-none">Mission Control</h1>
-            <p className="text-muted-foreground font-bold text-sm tracking-tight">Monitoring {monitors?.length || 0} active cluster nodes.</p>
+    <AppLayout container className="bg-slate-950 min-h-screen">
+      <div className="space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black text-white tracking-tight">Mission Control</h1>
+            <p className="text-slate-400 font-medium">Monitoring {monitors?.length || 0} production endpoints.</p>
           </div>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-secondary border-border text-muted-foreground hover:text-foreground font-bold shadow-comfort"
-              onClick={() => navigate('/reports')}
-            >
-              <BarChart2 className="w-4 h-4 mr-2" />
-              Reports
-            </Button>
-            <Button
-              variant="outline"
-              className="bg-secondary border-border hover:bg-accent text-muted-foreground font-bold shadow-comfort"
-              onClick={handleSyncAll}
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="bg-slate-900 border-slate-800 hover:bg-slate-800"
+              onClick={() => refetch()}
               disabled={isFetching}
             >
-              <RefreshCw className={cn("w-4 h-4 mr-2", isFetching && "animate-spin text-emerald-500")} />
-              Sync All
+              <RefreshCw className={isFetching ? "w-4 h-4 animate-spin" : "w-4 h-4"} />
             </Button>
-            <Button
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-8 shadow-lg shadow-emerald-500/10 transition-comfort"
-              onClick={() => setIsDrawerOpen(true)}
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Add Node
+            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Monitor
             </Button>
           </div>
         </div>
-        <div className="flex items-center gap-4 p-3 bg-secondary/30 border border-border/50 rounded-2xl shadow-comfort">
+        {/* Filters/Search Bar */}
+        <div className="flex items-center gap-4 p-2 bg-slate-900/50 border border-slate-800 rounded-2xl">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Filter nodes by name or URL..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 bg-transparent border-none focus-visible:ring-0 text-foreground placeholder:text-muted-foreground font-medium"
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Input 
+              placeholder="Search monitors..." 
+              className="pl-10 bg-transparent border-none focus-visible:ring-0 text-slate-200 placeholder:text-slate-600"
             />
           </div>
-          <Button variant="ghost" size="sm" className="hidden sm:flex text-muted-foreground hover:text-foreground font-bold">
+          <Button variant="ghost" size="sm" className="text-slate-400 hover:text-white">
             <Filter className="w-4 h-4 mr-2" />
             Filter
           </Button>
-          <div className="hidden sm:block h-8 w-[1px] bg-border/50" />
-          <Button variant="ghost" size="icon" className="text-emerald-500 bg-emerald-500/10">
+          <div className="h-6 w-[1px] bg-slate-800" />
+          <Button variant="ghost" size="icon" className="text-emerald-500 bg-emerald-500/5">
             <LayoutGrid className="w-4 h-4" />
           </Button>
         </div>
+        {/* Grid */}
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-64 rounded-3xl bg-secondary animate-pulse border border-border" />
+              <div key={i} className="h-48 rounded-3xl bg-slate-900 animate-pulse border border-slate-800" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredMonitors.map((monitor) => (
-              <MonitorCard
-                key={monitor.id}
-                monitor={monitor}
-                onClick={() => handleCardClick(monitor.id)}
-              />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {monitors?.map((monitor) => (
+              <MonitorCard key={monitor.id} monitor={monitor} />
             ))}
-            <div
-              onClick={() => setIsDrawerOpen(true)}
-              className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border rounded-3xl group hover:border-emerald-500/40 transition-comfort cursor-pointer min-h-[220px] bg-secondary/10 hover:bg-emerald-500/[0.02] shadow-comfort"
-            >
-              <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-6 group-hover:bg-emerald-500/10 group-hover:text-emerald-500 transition-colors border border-border shadow-comfort">
-                <Plus className="w-8 h-8 text-muted-foreground group-hover:text-emerald-500 transition-transform duration-500 group-hover:rotate-90" />
+            {/* Empty State / Call to Action */}
+            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-800 rounded-3xl group hover:border-emerald-500/30 transition-colors cursor-pointer min-h-[190px]">
+              <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center mb-4 group-hover:bg-emerald-500/10 group-hover:text-emerald-500 transition-colors">
+                <Plus className="w-6 h-6 text-slate-500 group-hover:text-emerald-500" />
               </div>
-              <p className="text-sm font-black text-muted-foreground group-hover:text-foreground tracking-tight">Deploy New Node</p>
-              <p className="text-xs text-muted-foreground/60 mt-2 text-center font-medium">Start tracking uptime in seconds</p>
+              <p className="text-sm font-bold text-slate-500 group-hover:text-slate-300">New Endpoint</p>
             </div>
           </div>
         )}
-        <MonitorFormDrawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} />
       </div>
     </AppLayout>
   );
