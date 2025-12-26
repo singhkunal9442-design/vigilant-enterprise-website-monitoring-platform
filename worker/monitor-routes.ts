@@ -50,20 +50,20 @@ export function monitorRoutes(app: Hono<{ Bindings: Env }>) {
   });
   // SYNC ALL MONITORS (Global check trigger)
   app.post('/api/monitors/sync-all', async (c) => {
+    // Manually trigger the global engine check for all monitors
     const results = await performGlobalCheck(c.env);
     return ok(c, results);
   });
-  // TRIGGER MANUAL CHECK (with simulation support)
+  // TRIGGER MANUAL CHECK
   app.post('/api/monitors/:id/check', async (c) => {
     const id = c.req.param('id');
     const simulateFailure = c.req.query('simulate_failure') === 'true';
     const entity = new MonitorEntity(c.env, id);
     if (!await entity.exists()) return notFound(c, 'Monitor not found');
-    
     const monitor = await entity.getState();
     const historyEntry = await runSingleCheck(c.env, monitor, simulateFailure);
+    // addHistory handles status updates and persistence internally via entity.mutate
     await entity.addHistory(historyEntry);
-    
     const updated = await entity.getState();
     return ok(c, updated);
   });

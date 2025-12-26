@@ -2,7 +2,10 @@ import { Hono } from "hono";
 import type { Env } from './core-utils';
 import { UserEntity } from "./entities";
 import { ok, bad, isStr } from './core-utils';
+import { monitorRoutes } from "./monitor-routes";
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
+  // Register Monitor Routes
+  monitorRoutes(app);
   app.get('/api/test', (c) => c.json({ success: true, data: { name: 'Vigilant Monitoring API' }}));
   // USERS
   app.get('/api/users', async (c) => {
