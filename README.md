@@ -1,6 +1,6 @@
 # Vigilant Monitor
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/singhkunal9442-design/vigilant-enterprise-website-monitoring-platform)
 
 A production-ready full-stack chat application built on Cloudflare Workers with Durable Objects for stateful entities (Users, Chats, Messages). Features a modern React frontend with shadcn/ui, Tailwind CSS, and Tanstack Query for seamless real-time data management.
 
@@ -77,7 +77,7 @@ bun preview
    (Alias for `bun build && wrangler deploy`)
 
 3. **One-Click Deploy**:
-   [cloudflarebutton]
+   [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/singhkunal9442-design/vigilant-enterprise-website-monitoring-platform)
 
 **Note**: Ensure `wrangler.jsonc` has your project name and bindings configured. Durable Objects auto-migrate on first deploy.
 
